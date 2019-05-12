@@ -14,13 +14,16 @@ pub_year = []
 
 days = np.arange(1, 32)
 months = np.arange(1, 13)
-years = np.arange(1996, 2020)
+years = np.arange(1996, 2019)
 
+print("Reading Headlines:")
 for year, month, day in tqdm(product(years, months, days), total=len(years) * len(months) * len(days)):
     url = "https://www.dailymail.co.uk/home/sitemaparchive/day_%04d%02d%02d.html" % (year, month, day)
 
     # Open page
     r = requests.get(url)
+    if r.status_code != 200:
+        continue
     soup = BeautifulSoup(r.text, 'html.parser')
     titles = soup.find("ul", {"class": "archive-articles debate link-box"}).find_all("a")
 
@@ -42,6 +45,8 @@ for year, month, day in tqdm(product(years, months, days), total=len(years) * le
 
 # Turn into dframe and save
 dframe = pd.DataFrame(
-    {"title": lowercase_text, "capitalised_index": one_hot,
+    {"headline": lowercase_text, "capitalised_index": one_hot,
      "pub_day": pub_day, "pub_month": pub_month, "pub_year": pub_year})
 
+print("Saving to CSV")
+dframe.to_csv("data.csv")
