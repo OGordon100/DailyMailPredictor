@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import os
 
-database_name = "data.csv"
+database_name = "data_no_short_words.csv"
 lowercase_text = []
 one_hot = []
 pub_date = []
@@ -31,7 +31,7 @@ for date in tqdm(pd.date_range(start_date, end_date)):
     if len(titles) != 0:
         full_title = [title.text for title in titles]
         for title in full_title:
-            capitalised_vector = [int(t.isupper()) for t in title.split()]
+            capitalised_vector = [int(t.isupper()) for t in title.split() if len(t) > 3]
             if sum(capitalised_vector) > 0:
                 lowercase_text.append(title.lower())
                 one_hot.append(np.nonzero(capitalised_vector)[0])
