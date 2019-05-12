@@ -5,13 +5,16 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import os
 
-start_date = '1996-01-01'
-end_date = pd.datetime.today()
-
 database_name = "data.csv"
 lowercase_text = []
 one_hot = []
 pub_date = []
+
+if os.path.isfile(database_name):
+    start_date = pd.read_csv(database_name).tail(1).pub_date.values[0] + pd.Timedelta(days=1)
+else:
+    start_date = '1996-01-01'
+end_date = pd.datetime.today()
 
 print("Reading Archive Webpages:")
 for date in tqdm(pd.date_range(start_date, end_date)):
@@ -24,15 +27,11 @@ for date in tqdm(pd.date_range(start_date, end_date)):
     soup = BeautifulSoup(r.text, 'html.parser')
     titles = soup.find("ul", {"class": "archive-articles debate link-box"}).find_all("a")
 
-    # If history on that day
+    # Store info only for titles containing fully capitalised words
     if len(titles) != 0:
         full_title = [title.text for title in titles]
-
         for title in full_title:
-            # Store info only for titles containing fully capitalised words
-            split_title = title.split()
             capitalised_vector = [int(t.isupper()) for t in title.split()]
-
             if sum(capitalised_vector) > 0:
                 lowercase_text.append(title.lower())
                 one_hot.append(np.nonzero(capitalised_vector)[0])
