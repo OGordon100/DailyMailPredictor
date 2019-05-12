@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import os
 
-start_date = '2001-02-01'
-end_date = '2001-02-10'
+start_date = '1996-01-01'
+end_date = pd.datetime.today()
 
 database_name = "data.csv"
 lowercase_text = []
