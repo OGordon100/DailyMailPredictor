@@ -1,28 +1,24 @@
 import os
 import pickle
 
-import matplotlib
 import pandas as pd
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
-from keras.layers import Dense, Embedding, LSTM, RepeatVector
+from keras.layers import Dense, Embedding, LSTM, Bidirectional
 from keras.models import Sequential
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
 
-matplotlib.use('tkagg')
-import matplotlib.pyplot as plt
-
 # Read in data and fix datatype
-data = pd.read_csv("data_no_short_words.csv")
+data = pd.read_csv("data.csv")
 data.pub_date = pd.to_datetime(data.pub_date)
 data.capitalised_index = [list(map(int, bodge.replace("[", "").replace("]", "").split())) for bodge in
                           data.capitalised_index.str.replace("'", "")]
 
 # Set up callbacks and helper functions
 tensorboard = TensorBoard(log_dir='logs/')
-checkpoints = ModelCheckpoint('model_checkpoint_1.h5',
+checkpoints = ModelCheckpoint(f'model_checkpoint.h5',
                               monitor='val_loss', mode='min', save_best_only=True)
 earlystopping = EarlyStopping(monitor='val_loss', patience=10)
 
@@ -30,6 +26,7 @@ binarizer = MultiLabelBinarizer()
 
 embedding_dim = 100
 num_words = 50000
+lstm_dim = 100
 
 if os.path.isfile("tokenizer.pickle") is True:
     with open('tokenizer.pickle', 'rb') as handle:
@@ -50,27 +47,12 @@ y = binarizer.fit_transform(data.capitalised_index)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=1234)
 
 # Train model
-# model = Sequential()
-# model.add(Embedding(num_words, embedding_dim, input_length=x.shape[1]))  # None?
-# model.add(Bidirectional(LSTM(100, dropout=0.2, recurrent_dropout=0.2)))
-# model.add(Dense(y.shape[1], activation='softmax'))
-# model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-model = Sequential() #alternative to try!
-model.add(Embedding(num_words, embedding_dim, input_length=x.shape[1]))
-model.add(LSTM(150))
-model.add(RepeatVector(x.shape[1]))
-model.add(LSTM(150, return_sequences=True))
+model = Sequential()
+model.add(Embedding(num_words, embedding_dim, input_length=x.shape[1]))  # None?
+model.add(Bidirectional(LSTM(lstm_dim, dropout=0.2, recurrent_dropout=0.2)))
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-model.fit(x_train, y_train, epochs=150, batch_size=8192, verbose=1, validation_data=(x_test, y_test),
+model.fit(x_train, y_train, epochs=150, batch_size=2048, verbose=1, validation_data=(x_test, y_test),
           callbacks=[tensorboard, earlystopping, checkpoints])
-scores = model.evaluate(x_test, y_test, verbose=1, batch_size=8192)
-
-data = data.set_index('pub_date', drop=True)
-data.capitalised_index.str.len().resample("M").mean().plot(style='x')
-plt.title("Rabidness Over Time")
-plt.xlabel("Date")
-plt.ylabel("Mean Number of Capitalised Words")
-plt.show()
+scores = model.evaluate(x_test, y_test, verbose=1, batch_size=2048)
