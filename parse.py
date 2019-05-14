@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 database_name = "data_no_short_words_new.csv"
-paper_names = ["daily star", "daily mail"]
+paper_names = ["daily star", "express", "daily mail"]
 
 lowercase_text = []
 one_hot = []
@@ -28,6 +28,8 @@ for paper_name, date in tqdm(product(paper_names, date_range), total=len(paper_n
         url = "https://www.dailymail.co.uk/home/sitemaparchive/day_%04d%02d%02d.html" %(date.year, date.month, date.day)
     elif paper_name == "daily star":
         url = "https://www.dailystar.co.uk/sitearchive/%04d/%01d/%01d" %(date.year, date.month, date.day)
+    elif paper_name == "express":
+        url = "https://www.express.co.uk/sitearchive/%04d/%01d/%01d" %(date.year, date.month, date.day)
     else:
         raise ValueError("Paper not supported!")
 
@@ -38,7 +40,7 @@ for paper_name, date in tqdm(product(paper_names, date_range), total=len(paper_n
     soup = BeautifulSoup(r.text, 'html.parser')
     if paper_name == 'daily mail':
         titles = soup.find("ul", {"class": "archive-articles debate link-box"}).find_all("a")
-    elif paper_name == 'daily star':
+    elif paper_name == 'daily star' or paper_name == 'express':
         titles = soup.find("ul", {"class": "section-list"}).find_all("a")
     else:
         titles = None
