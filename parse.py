@@ -7,8 +7,10 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-database_name = "data_no_short_words_new.csv"
+database_name = "data_no_short_words_newnew.csv"
 paper_names = ["daily star", "express", "daily mail"]
+
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 
 lowercase_text = []
 one_hot = []
@@ -34,7 +36,7 @@ for paper_name, date in tqdm(product(paper_names, date_range), total=len(paper_n
         raise ValueError("Paper not supported!")
 
     # Open page
-    r = requests.get(url)
+    r = requests.get(url, headers=headers)
     if r.status_code != 200:
         continue
     soup = BeautifulSoup(r.text, 'html.parser')
@@ -49,7 +51,7 @@ for paper_name, date in tqdm(product(paper_names, date_range), total=len(paper_n
     if len(titles) != 0:
         full_title = [title.text for title in titles]
         for title in full_title:
-            capitalised_vector = [int(t.isupper()) for t in title.split() if len(t) > 3]
+            capitalised_vector = [int(len(t) > 3 and (t.isupper())) for t in title.split()]
             if sum(capitalised_vector) > 0:
                 lowercase_text.append(title.lower())
                 one_hot.append(np.nonzero(capitalised_vector)[0])
