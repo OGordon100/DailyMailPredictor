@@ -1,6 +1,7 @@
 import os
 import pickle
 
+import numpy as np
 import pandas as pd
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from keras.layers import Dense, Embedding, LSTM, Bidirectional
@@ -56,3 +57,5 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accur
 model.fit(x_train, y_train, epochs=150, batch_size=2048, verbose=1, validation_data=(x_test, y_test),
           callbacks=[tensorboard, earlystopping, checkpoints])
 scores = model.evaluate(x_test, y_test, verbose=1, batch_size=2048)
+
+scores_random = model.evaluate(x_test, np.random.randint(low=0, high=1, size=y_test.shape))
